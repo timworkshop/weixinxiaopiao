@@ -96,7 +96,7 @@ public class MainActivity extends Activity {
             info.setText(date + "\n" + row.name + "\n判断：" + ("PROBABLE_RECEIPT".equals(row.classification) ? "疑似收款小票" : "需要人工复核") +
                     ("SHARE_OPENED".equals(row.reviewState) ? "\n状态：已打开分享面板，尚不代表打印成功；若已打印请勿重复操作" : "\n状态：待人工确认") +
                     "\n二维码：" + row.qrCount + "；关键词：" + (row.matchedKeywords == null ? "无" : row.matchedKeywords));
-            Button review = new Button(this); review.setText("查看图片并确认"); review.setOnClickListener(v -> showReviewDialog(row));
+            Button review = new Button(this); review.setText("核对小票并选择打印应用"); review.setOnClickListener(v -> showImageAndShare(row, Uri.parse(row.uri)));
             Button reject = new Button(this); reject.setText("忽略此图片"); reject.setOnClickListener(v -> {
                 recordDb.setReviewState(row.uri, "IGNORED"); refreshPending();
             });
@@ -104,16 +104,6 @@ public class MainActivity extends Activity {
             View line = new View(this); line.setBackgroundColor(0xFFDDDDDD); line.setMinimumHeight(1);
             pendingContainer.addView(card); pendingContainer.addView(line);
         }
-    }
-
-    private void showReviewDialog(ReceiptRecordDb.PendingRecord row) {
-        Uri uri = Uri.parse(row.uri);
-        String detail = "文件：" + row.name + "\n识别分类：" + row.classification + "\n关键词：" + row.matchedKeywords +
-                "\n\n请先核对原图。点击下一步只会打开系统分享面板，由你选择 Thermer 等打印应用；是否真正打印由打印应用决定。";
-        new AlertDialog.Builder(this).setTitle("人工核对小票").setMessage(detail)
-                .setNegativeButton("暂不处理", null)
-                .setNeutralButton("忽略", (d, w) -> { recordDb.setReviewState(row.uri, "IGNORED"); refreshPending(); })
-                .setPositiveButton("查看原图", (d, w) -> showImageAndShare(row, uri)).show();
     }
 
     private void showImageAndShare(ReceiptRecordDb.PendingRecord row, Uri uri) {
@@ -127,7 +117,7 @@ public class MainActivity extends Activity {
         try { preview.setImageURI(uri); }
         catch (Exception e) { Toast.makeText(this, "原图预览失败：" + e.getMessage(), Toast.LENGTH_LONG).show(); }
         TextView note = new TextView(this);
-        note.setText("文件：" + row.name + "\n\n请确认这确实是本次收款小票。下一步只打开系统分享面板，不会直接打印。你还需要在 Thermer 等打印应用内再次确认。");
+        note.setText("文件：" + row.name + "\n\n请确认这确实是本次收款小票。点击“确认并选择打印应用”后只打开系统分享面板，不会直接打印。你还需要在 Thermer 等打印应用内再次确认。");
         note.setPadding(0, 12, 0, 4);
         content.addView(preview);
         content.addView(note);
